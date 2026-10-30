@@ -1,0 +1,52 @@
+# Seeds of all random procedures (subsampling, bootstrap, permutation, noise ensembles, per-frame scoring).
+subsample_base: 20261024
+bootstrap: 7          # 返修新增 bootstrap 统一用 7
+permutation: 0        # 与原稿 42_null_baselines.py 一致
+# 原稿复现（S0）必须沿用原脚本自己的种子与 RNG 消耗顺序：
+original:
+  null_baselines_42: 0          # code/analysis/42_null_baselines.py default_rng(0)
+  lopo_40_bootstrap: 0          # code/analysis/40_learned_operator_lopo.py default_rng(0)
+  rf_random_state: 0
+  gbm_random_state: 0
+  fig4_matched50: 42            # figures/scripts/Fig4.py default_rng(42)
+  sf7_global: 7                 # figures/scripts/SF7.py default_rng(7)
+  fig2_effect: 7                # figures/scripts/Fig2.py default_rng(7)
+  scale_24: 0                   # code/analysis/24_scale_characterization.py default_rng(0)
+generators:
+  str2str_xtal: [11, 12, 13, 14, 15]
+  t3_new: 11
+noise:
+  seeds: [21, 22, 23, 24, 25]
+# 逐帧打分种子（s4_rescore.py:det_seed）：sha256(f"{generator}|{protein}|{frame_idx}|{recon_k}|{attempt}") 的前 8 位十六进制 mod (2^31−2) + 1。
+# 同一个整数同时传给 random.seed（PDBFixer/Modeller 放氢用 Python 全局 random）和 PDBFixer.addMissingAtoms(seed=…)（补出的侧链原子碰撞时 Langevin 动力学的积分器种子）。
+# attempt=0 为首次，attempt=1 为超时或报错后的重试（换种子）。同种子重跑逐位一致，前提是 OpenMM CPU 平台单线程：OPENMM_CPU_THREADS=1 必须在 OpenMM 加载之前进入进程环境
+score_frame_seed: "sha256(generator|protein|frame_idx|recon_k|attempt)[:8] mod (2^31-2) + 1"
+# 抽样索引冻结（s4_freeze_draw_indices.py）：第 r 次抽样的 entropy = 20261024 + 1000 + r；SeedSequence 的 spawn_key = (sha256(basis|generator|protein)[:8], M)。
+# S10 又明写 20261024+1000+r；且 R=200 时相邻阶段的区间会重叠（+700 的第 100 次 = +800 的第 0 次）。因所有阶段读取同一批冻结文件，种子只在冻结时用一次。
+draw_entropy_base: 20261024
+draw_entropy_offset: 1000
+# C-parity 归因实验（s4_repeat_noise.py）：独立重复打分 rep=1,2,3 的种子 = sha256(f"{generator}|{protein}|{frame_idx}|{recon_k}|{attempt}|rep{rep}")（同样取前 8 位 mod (2^31-2)+1）。
+# rep=0（不带 "|rep0" 后缀）即正式重打分，种子与之前逐位相同。
+score_frame_seed_repeat: "sha256(generator|protein|frame_idx|recon_k|attempt|rep{r})[:8] mod (2^31-2) + 1, r=1..3"
+
+noise_calibration_seeds: [101, 102, 103]        # s5_noise_ensembles.py CAL_SEEDS：割线法校准，每次 20 个构象；笛卡尔重新校准（s5_noise_cart_recalibrate.py）固定 101；最终噪声种子 21–25 见上面 noise.seeds
+stage6:
+  bootstrap: 7                                  # s6a / s6b / s6d / s6f：default_rng(7)；残基 bootstrap B=10^4；s6b 的 20,000 个“每个蛋白一次随机重建”组合模拟另用 default_rng(7)
+  hdxer_signflip_permutation: {seed: 0, B: 1000000}    # s6c_hdxer.py signflip_p
+  hdxer_reconstruction_seeds: "1000 + k"        # s6c_hdxer.py：重建种子敏感性
+stage7:
+  bootstrap: "default_rng(7) 对每个（场景, 生成器）单独起算"   # s7_invpf_form.py：结果不依赖其他组的顺序
+  controls: 0                                   # s7_controls.py 阳性对照
+  R500_rule: "frozen entropy 20261024+1000+r, spawn_key=(cell,M)；前 200 行必须与已冻结的 R=200 文件逐位相同"   # s7_r500_confirm.py
+stage8:
+  lopo_bootstrap: 7                             # s8b_lopo_linear.py default_rng(7)
+  sasa_baseline_bootstrap: "default_rng(7) 与 default_rng([7, 生成器序号, 场景序号, 检验序号])"   # s8c_sasa_baseline.py
+  noise_tests: "default_rng([7, sha256('|'.join(tags))[:8]])"   # s8d_noise_tests.py：每个检验按标签独立播种
+stage9:
+  bootstrap: "default_rng([7, sha256('|'.join(tags))[:8]])"     # s9a_subsets.py
+  permutation: {seed: 0, B_single_structure_G2: 5000, B_label_permutation_negative_control: 1000}   # s9a / s9b
+stage10:
+  entropy: 20261034                              # 20261024 + 10，lib/globalstats.py：default_rng([ENTROPY, sha256(tags)[:8]])
+  permutation_B: 100000                          # 置换 p 的下限 1/(10^5+1)
+  bootstrap_B: 10000
+stage12: "无随机过程"

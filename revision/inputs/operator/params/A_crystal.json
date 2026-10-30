@@ -1,0 +1,14 @@
+{
+ "basis": "crystal",
+ "betaC_noint": 0.33413170140288323,
+ "betaH_noint": 2.882235773200142,
+ "betaC_int": 0.2118352998862654,
+ "betaH_int": 2.463382020659872,
+ "intercept": 3.9191393645210906,
+ "pooled_pearson": 0.6117924958618767,
+ "lopo_pearson": 0.34540000000000004,
+ "n_proteins": 5,
+ "n_residues": 229,
+ "default_betaC": 0.35,
+ "default_betaH": 2.0
+}

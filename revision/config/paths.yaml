@@ -1,0 +1,37 @@
+# Single source of all input and output paths used by the scripts (no absolute paths inside the scripts).
+# Change the first two entries, or set GEC_PROJECT_ROOT / GEC_REVISION_ROOT.
+project_root: inputs   # 相对包根解析（revio.load_paths）
+revision_root: .
+conda_sh: ''
+
+# 以下均为相对 project_root 的原项目只读输入
+inputs:
+  tier1a_all: data/processed/tier1a_all.parquet
+  tier1a_dgopen: data/processed/tier1a_dGopen.parquet
+  tier1a_classics_dir: data/processed/tier1a_classics
+  tier1a_raw_nguyen: data/raw/tier1a_nguyen2022
+  tier1a_raw_classics: data/raw/tier1a_classics
+  tier1a_sequences: data/processed/tier1a_sequences.json
+  structure_maps: data/processed/structure_maps.json
+  pdb_dir: data/external/pdb
+  gen_dir: gen
+  eval_pred_dir: eval/pred
+  leaderboard: eval/leaderboard.parquet
+  operator_ceiling: results/operator_ceiling.parquet
+  results_tables: results/tables
+  results_stats: results/stats
+  figures_data: figures/data
+  tier3_subset: data/processed/tier3_anchor_subset.json
+  tier3_40_72: data/processed/tier3_tsuboyama_40_72.parquet
+  tier3_all: data/processed/tier3_tsuboyama.parquet
+  tsuboyama_ds23: data/raw/Processed_K50_dG_datasets/Tsuboyama2023_Dataset2_Dataset3_20230416.csv
+  tsuboyama_ds1: data/raw/Processed_K50_dG_datasets/Tsuboyama2023_Dataset1_20230416.csv
+  tier3_clust_dir: data/interim
+  tier2_start2fold: data/processed/tier2_start2fold.parquet
+  atlas_splits_dir: repos/alphaflow/splits
+  bioemu_repo: repos/bioemu
+  hdxer_repo: repos/HDXer
+  str2str_repo: repos/Str2Str
+  mmseqs: tools/mmseqs/bin/mmseqs
+  operator_params: operator/params
+  worklog: docs/WORKLOG.md
