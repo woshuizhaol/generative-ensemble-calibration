@@ -19,7 +19,7 @@ PROJ, REV, INP = revio.load_paths()
 PROTS = sorted(json.load(open(INP["tier1a_sequences"]))); B = 10000
 SUBSETS = {"S_all": set(PROTS), "S_noIm7": set(PROTS) - {"Im7"}, "S_noWeak4": set(PROTS) - {"Barstar", "CI2", "CheY", "UCH-L1"}, "S_noCI2barstar": set(PROTS) - {"CI2", "Barstar"},
            "S_noIm7_noWeak4": set(PROTS) - {"Im7", "Barstar", "CI2", "CheY", "UCH-L1"}, "S_noSNase": set(PROTS) - {"SNase"}}
-NB = pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv")).set_index("protein"); ceil = pd.read_parquet(INP["operator_ceiling"]); OFF_S = dict(zip(ceil.protein, ceil.offset.astype(int)))
+NB = revio.correct_null_baselines(pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv")), INP).set_index("protein"); ceil = pd.read_parquet(INP["operator_ceiling"]); OFF_S = dict(zip(ceil.protein, ceil.offset.astype(int)))
 
 
 def rng_for(*tags):

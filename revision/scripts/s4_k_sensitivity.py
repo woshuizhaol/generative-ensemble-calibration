@@ -33,7 +33,7 @@ PAR = pd.read_csv(os.path.join(REV, "tables", "S4_parity.csv")).dropna(subset=["
 OFF = PAR.groupby("protein").offset.first().astype(int).to_dict()
 MP = pd.read_csv(os.path.join(REV, "tables", "S4_old_column_to_frame_map.csv"))
 ceil = pd.read_parquet(INP["operator_ceiling"]); CEIL = dict(zip(ceil.protein, ceil.spearman)); CEIL_OFF = dict(zip(ceil.protein, ceil.offset.astype(int)))   # 沉积结构有自己的偏移（CI2 为 +1），不能用生成器的偏移
-nb = pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv"))
+nb = revio.correct_null_baselines(pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv")), INP)
 prots = sorted(OFF)
 
 

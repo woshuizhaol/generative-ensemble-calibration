@@ -49,7 +49,7 @@ log = revio.RunLogger(stage=0, task="baseline_repro", cpu_procs=1, seeds="orig:0
 # ======================== K1：残基层 系综 vs 单结构 ========================
 exp = pd.read_parquet(INP["tier1a_all"])
 maps = json.load(open(INP["structure_maps"]))
-ceil = pd.read_parquet(INP["operator_ceiling"]); ceilsp = dict(zip(ceil.protein, ceil.spearman))
+ceil = pd.read_parquet(INP["structure_baseline_original"]); ceilsp = dict(zip(ceil.protein, ceil.spearman))
 nb = pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv"))
 
 # (a) 从 eval/pred/BioEmu/*.csv 独立重算逐蛋白系综 Spearman（原 42_null_baselines.py:19–25 的对齐规则）

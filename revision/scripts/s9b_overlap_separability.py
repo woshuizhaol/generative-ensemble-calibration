@@ -15,7 +15,7 @@ PROJ, REV, INP = revio.load_paths()
 PROTS = S7.PROTS; B = 10000
 FIVE = {"BioEmu": "BioEmu", "ESMFlow": "ESMFlow", "Boltz2": "Boltz2", "Str2Str": "Str2Str_legacy", "ShortMD": "ShortMD"}   # 报告名 → S7 里的生成器名；main() 按 --str2str 把 "Str2Str" 换成 Str2Str_xtal（新版，沉积结构起点）或 Str2Str_legacy（旧版，BioEmu 首帧起点）
 SFX = ""   # 变体依赖型输出表的后缀：新版为主（无后缀），旧版并列为 _str2str_legacy
-ceil = pd.read_parquet(INP["operator_ceiling"]); OFF_S = dict(zip(ceil.protein, ceil.offset.astype(int))); NB = pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv")).set_index("protein")
+ceil = pd.read_parquet(INP["operator_ceiling"]); OFF_S = dict(zip(ceil.protein, ceil.offset.astype(int))); NB = revio.correct_null_baselines(pd.read_csv(os.path.join(INP["results_tables"], "null_baselines.csv")), INP).set_index("protein")
 
 
 def draws_rho(dname, p, form="count_avg", basis="O"):

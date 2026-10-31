@@ -2,7 +2,7 @@
 数据：EX2 子集 5 个蛋白（Barnase、RNase A、SNase、CI2、cyt c；41+25+101+14+48 = 229 个残基；原稿的集合，不含 RNase H_Tt）。
 预测：沉积结构 10 次重建（S4a 的 Crystal parquet，recon_k 0–9），ln PF_pred = 0.35·N_C + 2.0·N_H（固定系数，单结构，无系综）。
 实验：ln PF_exp = dGopen_kcal / (R·T_exp)（S1 终表；对 10 个 Nguyen 蛋白与 tier1a_dGopen 的 log10PF·ln10 精确相等，cyt c 来自 Milne 表，脚本里逐项核对）。
-编号偏移：口径 O 沿用原稿（cyt c 为 0）；offset_mode=identity 时 cyt c 用身份核对后的偏移 +1（S1_alignment_map.json），作敏感性分析。
+编号偏移：主分析（offset_mode=manuscript）读修正后的单结构基线表，cyt c 的沉积结构用身份核对后的偏移 +1；offset_mode=unshifted 时 cyt c 用未平移的偏移 0（原稿的编号，残基名只有 3/48 一致），作敏感性分析。
 温度：ΔG 空间两种方案——dG_pred_298 = R·298.15·lnPF_pred 与 dG_pred_Texp = R·T_exp·lnPF_pred；实验 ΔG 始终用各自的 T_exp。
 不确定度：残基 bootstrap B=10⁴、seed 7；每次重抽对 10 次重建各算一遍统计量再取均值（得到"10 次重建均值"的 CI）。
 输出：tables/S6_per_protein_absolute.csv、tables/S6_pooling_decomposition.csv、tables/S6_a_reproduction_checks.csv。"""
@@ -20,7 +20,7 @@ log = revio.RunLogger(stage=6, task="absolute_scale_a", cpu_procs=1, seeds="boot
 EX2 = ["Barnase", "RNaseA", "SNase", "CI2", "cytochrome_c"]; B = 10000; BC, BH = bv.BETA_C, bv.BETA_H; R_GAS = bv.R_GAS; LN10 = np.log(10)
 S1 = pd.read_parquet(os.path.join(REV, "tables", "S1_tier1a_residues_final.parquet"))
 ceil = pd.read_parquet(INP["operator_ceiling"]); OFF_MS = dict(zip(ceil.protein, ceil.offset.astype(int)))
-OFF_ID = dict(OFF_MS); OFF_ID["cytochrome_c"] = 1   # 身份核对后的偏移：对沉积结构 1HRC 的残基名，offset 0 时 3/48 一致，+1 时 48/48（S1_deposited_structure_numbering.csv）；仅用于身份偏移敏感性
+OFF_UNSHIFTED = dict(OFF_MS); OFF_UNSHIFTED["cytochrome_c"] = 0   # 未平移的编号：1HRC 沉积结构的残基名在 offset 0 时只有 3/48 一致、+1 时 48/48（S1_deposited_structure_numbering.csv）；主分析用 +1，offset 0 只作敏感性
 
 
 def load_exp(p):
@@ -35,7 +35,7 @@ def load_pred(p):
 
 def build(mode):
     """返回 {蛋白: dict(exp=DataFrame, T, pred=array(10,n) lnPF_pred, resi)}（按残基号对齐到实验表）。"""
-    out = {}; off = OFF_ID if mode == "identity" else OFF_MS
+    out = {}; off = OFF_UNSHIFTED if mode == "unshifted" else OFF_MS
     for p in EX2:
         e, T = load_exp(p); P = load_pred(p); rows = []
         for k in range(10):
@@ -55,7 +55,7 @@ def spearman_boot(pred, obs, idx):
 
 def main():
     rng = np.random.default_rng(7); per_rows, pool_rows, checks, rec_rows = [], [], [], []
-    for mode in ("manuscript", "identity"):
+    for mode in ("manuscript", "unshifted"):
         D = build(mode)
         # ---------------- 步骤 1：逐蛋白指标（ΔG 空间两种温度 + ln PF 空间），10 次重建均值 ± SD 与 bootstrap CI
         for p in EX2:

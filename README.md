@@ -26,7 +26,7 @@ environment/rev_environment.yml        conda environment used for the analyses
 
 | Stage | Scripts (`revision/scripts/`) | Content |
 |---|---|---|
-| 0–1 | `s0_*`, `s1_*` | reproduction of the first analysis; data accounting; residue numbering |
+| 0–1 | `s0_*`, `s1_*`, `s1c_*` | reproduction of the first analysis; data accounting; residue numbering; single-structure baseline with the corrected numbering of the deposited structure of cytochrome c |
 | 2 | `s2_*` | overlap of the twelve proteins with generator training data |
 | 3 | `s3_*` | generator settings, compute cost, molecular-dynamics protocol |
 | 4 | `s4_*` | per-conformer contact and hydrogen-bond counts (PDBFixer protonation at pH 7.0), frozen random-draw indices |
@@ -58,6 +58,7 @@ conda env create -p ./env_rev -f environment/rev_environment.yml
 cd revision
 export CUDA_VISIBLE_DEVICES=""                           # scoring and statistics use the CPU only
 export OPENMM_CPU_THREADS=1                              # before OpenMM is loaded; required for deterministic re-scoring
+../env_rev/bin/python scripts/s1c_ceiling_corrected.py   # baseline of the deposited structures, cytochrome c at offset +1 -> tables/S1_deposited_structure_baseline_corrected.parquet
 ../env_rev/bin/python scripts/s7_invpf_form.py           # tail-weighted versus mean-count averaging -> tables/S7_*.csv
 ../env_rev/bin/python scripts/s9a_subsets.py             # paired tests in subsets of proteins -> tables/S9_subset_tests.csv
 ../env_rev/bin/python scripts/s14_altstart_rho.py        # short-MD from BioEmu conformations -> tables/S14_*.csv

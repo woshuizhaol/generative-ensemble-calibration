@@ -14,6 +14,11 @@ def load_paths():
     proj = proj if os.path.isabs(proj) else os.path.abspath(os.path.join(REV_ROOT_DEFAULT, proj))   # 相对路径相对 revision 根目录解析：存档包里 project_root=inputs、revision_root=. 即可搬迁
     rev = rev if os.path.isabs(rev) else os.path.abspath(os.path.join(REV_ROOT_DEFAULT, rev))
     inp = {k: os.path.join(proj, v) for k, v in cfg["inputs"].items()}
+    # 细胞色素 c 的沉积结构编号修正（S1c）：存在修正后的单结构基线表时，所有分析默认读它；原表保留为 structure_baseline_original
+    inp["structure_baseline_original"] = inp["operator_ceiling"]
+    corr = os.path.join(rev, "tables", "S1_deposited_structure_baseline_corrected.parquet")
+    if os.path.exists(corr):
+        inp["operator_ceiling"] = corr
     return proj, rev, inp
 
 
@@ -90,3 +95,15 @@ class RunLogger:
         with open(os.path.join(self.rev, "run", "commands.sh"), "a") as f:
             f.write(f"# end={end_iso} wall_s={wall} exit={exit_code} status={status} outputs={';'.join(outputs)}\n\n")
         return row
+
+
+def correct_null_baselines(nb, inp):
+    """原稿 null_baselines.csv 的单结构基线，细胞色素 c 一行换成修正后的基线（S1c：偏移 +1 下十次种子重建的均值）；其余行不变。
+    nb 可以以 protein 为列或为索引。delta_vs_ceiling 按原规则（三位小数相减）重算。"""
+    import pandas as pd
+    new = float(pd.read_parquet(inp["operator_ceiling"]).set_index("protein").loc["cytochrome_c", "spearman"])
+    nb = nb.copy()
+    idx = (nb["protein"] == "cytochrome_c") if "protein" in nb.columns else (nb.index == "cytochrome_c")
+    nb.loc[idx, "single_struct_ceiling"] = new
+    nb.loc[idx, "delta_vs_ceiling"] = nb.loc[idx, "obs_spearman"].round(3) - round(new, 3)
+    return nb
